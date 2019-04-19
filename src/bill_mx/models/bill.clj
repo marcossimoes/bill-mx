@@ -18,23 +18,22 @@
 
 ;; BILL
 
-(defn- bill-status-dispatch [status]
-  (case status
-    :future :future
-    :open :open-or-paid
-    :closed :closed-or-late
-    :late :closed-or-late
-    :paid :open-or-paid))
-
-(defmulti bill-status bill-status-dispatch)
+(defmulti bill-status ::status)
 
 (defmethod bill-status :future [_]
   (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total]))
 
-(defmethod bill-status :open-or-paid [_]
+(defmethod bill-status :open [_]
   (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid]))
 
-(defmethod bill-status :closed-or-late [_]
+(defmethod bill-status :closed [_]
   (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid ::min-pmt]))
+
+(defmethod bill-status :paid [_]
+  (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid]))
+
+(defmethod bill-status :late [_]
+  (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid ::min-pmt]))
+
 
 (s/def ::bill (s/multi-spec bill-status ::status))
