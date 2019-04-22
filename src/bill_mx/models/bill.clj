@@ -1,7 +1,9 @@
 (ns bill-mx.models.bill
   (:require [clojure.spec.alpha :as s]
             [bill-mx.models.general :as g]
-            [bill-mx.models.line-item :as l]))
+            [bill-mx.models.line-item :as l]
+            [bill-mx.time :as bt]
+            [bill-mx.numbers :as n]))
 
 ;; BILL ITEMS TYPES
 
@@ -24,16 +26,25 @@
   (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total]))
 
 (defmethod bill-status :open [_]
-  (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid]))
+  (s/and (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid])
+         #(n/not-neg? (::amount-paid %))))
 
 (defmethod bill-status :closed [_]
-  (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid ::min-pmt]))
+  (s/and (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid ::min-pmt])
+         #(n/not-neg? (::amount-paid %) (::min-pmt %))))
 
 (defmethod bill-status :paid [_]
-  (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid]))
+  (s/and (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid])
+         #(n/not-neg? (::amount-paid %))))
 
 (defmethod bill-status :late [_]
-  (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid ::min-pmt]))
+  (s/and (s/keys :req [::status ::effective-due-date ::due-date ::open-date ::close-date ::current-date ::line-items ::total ::amount-paid ::min-pmt])
+         #(n/not-neg? (::amount-paid %) (::min-pmt %))))
 
-
-(s/def ::bill (s/multi-spec bill-status ::status))
+(s/def ::bill (s/and (s/multi-spec bill-status ::status)
+                     #(bt/date-equal-or-after? (::effective-due-date %)
+                                            (::due-date %)
+                                            (::close-date %))
+                     #(bt/date-after? (::close-date %) (::open-date %))
+                     ;;#(n/not-neg? (::amount-paid %) (::min-pmt %))
+                     ))
