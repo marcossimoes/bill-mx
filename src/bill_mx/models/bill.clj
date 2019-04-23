@@ -45,6 +45,4 @@
                      #(bt/date-equal-or-after? (::effective-due-date %)
                                             (::due-date %)
                                             (::close-date %))
-                     #(bt/date-after? (::close-date %) (::open-date %))
-                     ;;#(n/not-neg? (::amount-paid %) (::min-pmt %))
-                     ))
+                     #(bt/date-after? (::close-date %) (::open-date %))))
