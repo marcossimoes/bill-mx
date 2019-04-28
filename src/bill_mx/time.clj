@@ -2,12 +2,11 @@
   (:require [clj-time.core :as t]
             [clj-time.coerce :as co]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as g]
-            [bill-mx.macros :as bm]))
+            [bill-mx.models.general :as g]
+            [bill-mx.macros :as bm]
+            [bill-mx.numbers :as n]))
 
-(s/def ::clj-time-coerce-type (s/or :inst inst?
-                                    :int integer?
-                                    :str string?))
+
 
 (defn date-equal-or-after?
   "Checks if the dates provided are the same
@@ -27,11 +26,11 @@
         (every? true?))))
 
 (s/fdef date-equal-or-after?
-        :args (s/alt :dueary (s/cat :one ::clj-time-coerce-type
-                                    :two ::clj-time-coerce-type)
-                     :variadic (s/cat :one ::clj-time-coerce-type
-                                      :two ::clj-time-coerce-type
-                                      :many (s/* ::clj-time-coerce-type)))
+        :args (s/alt :dueary (s/cat :one ::g/clj-time-coerce-type
+                                    :two ::g/clj-time-coerce-type)
+                     :variadic (s/cat :one ::g/clj-time-coerce-type
+                                      :two ::g/clj-time-coerce-type
+                                      :many (s/* ::g/clj-time-coerce-type)))
         :ret (s/or :boolean boolean? :nil nil?))
 
 (defn date-after?
@@ -44,6 +43,19 @@
                           formated-date-b)))
 
 (s/fdef date-after?
-        :args (s/cat :date-a ::clj-time-coerce-type
-                     :date-b ::clj-time-coerce-type)
+        :args (s/cat :date-a ::g/clj-time-coerce-type
+                     :date-b ::g/clj-time-coerce-type)
         :ret (s/or :boolean boolean? :nil nil?))
+
+(defn nxt-n-day
+  "Receives a bill with open-date and a contracted-due-day-of-month
+  and Returns a bill with due date"
+  [date day-of-month]
+  (let [days-to (- day-of-month (t/day date))]
+    (t/plus date (t/days days-to) (if (n/not-pos? days-to) (t/months 1)))))
+
+(s/fdef nxt-n-day
+        :args (s/cat :date ::g/date-type
+                     :day-of-month ::g/day-of-month)
+        :ret ::g/date-type
+        :fn #(t/after? (:ret %) (-> % :args :date)))
