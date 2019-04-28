@@ -1,8 +1,6 @@
 (ns bill-mx.time-test
-  (:require [clojure.test :refer :all]
-            [clojure.spec.test.alpha :as stest]
-            [bill-mx.time :refer :all]
-            [midje.sweet :refer :all]))
+  (:require [clojure.spec.test.alpha :as stest]
+            [bill-mx.time :refer :all]))
 
 (defn check' [spec-check]
   (->> spec-check
