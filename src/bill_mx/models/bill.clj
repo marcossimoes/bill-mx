@@ -8,11 +8,11 @@
 ;; BILL ITEMS TYPES
 
 (s/def ::status #{:future :open :closed :late :paid :draft})
-(s/def ::effective-due-date ::g/date-type)
-(s/def ::due-date ::g/date-type)
-(s/def ::open-date ::g/date-type)
-(s/def ::close-date ::g/date-type)
-(s/def ::current-date ::g/date-type)
+(s/def ::effective-due-date ::g/date)
+(s/def ::due-date ::g/date)
+(s/def ::open-date ::g/date)
+(s/def ::close-date ::g/date)
+(s/def ::current-date ::g/date)
 (s/def ::line-items (s/coll-of ::l/line-item :distinct true :into []))
 (s/def ::total ::g/money-type)
 (s/def ::amount-paid ::g/money-type)

@@ -7,8 +7,8 @@
 (s/def ::id ::g/id)
 (s/def ::type ::g/type)
 (s/def ::amount ::g/money-type)
-(s/def ::clear-date ::g/date-type)
-(s/def ::due-date ::g/date-type)
+(s/def ::clear-date ::g/date)
+(s/def ::due-date ::g/date)
 
 ;; LINE ITEM
 (s/def ::line-item (s/and (s/keys :req [::id ::type ::amount ::clear-date ::due-date])
