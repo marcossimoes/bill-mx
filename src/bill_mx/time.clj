@@ -1,6 +1,7 @@
 (ns bill-mx.time
   (:require [clj-time.core :as t]
             [clj-time.coerce :as co]
+            [clj-time.predicates :as pr]
             [clojure.spec.alpha :as s]
             [bill-mx.models.general :as g]
             [bill-mx.macros :as bm]
@@ -61,50 +62,62 @@
         :fn #(t/after? (:ret %) (-> % :args :date)))
 
 (def holidays
-  (map (partial apply t/date-time) [[2019 1 1]
-                                    [2019 1 6]
-                                    [2019 2 2]
-                                    [2019 2 4]
-                                    [2019 2 5]
-                                    [2019 2 14]
-                                    [2019 3 24]
-                                    [2019 3 6]
-                                    [2019 3 18]
-                                    [2019 3 18]
-                                    [2019 3 20]
-                                    [2019 4 21]
-                                    [2019 4 14]
-                                    [2019 4 18]
-                                    [2019 4 19]
-                                    [2019 4 20]
-                                    [2019 5 21]
-                                    [2019 5 30]
-                                    [2019 5 1]
-                                    [2019 5 5]
-                                    [2019 5 10]
-                                    [2019 5 15]
-                                    [2019 5 30]
-                                    [2019 6 9]
-                                    [2019 6 16]
-                                    [2019 6 20]
-                                    [2019 6 21]
-                                    [2019 8 15]
-                                    [2019 9 15]
-                                    [2019 9 16]
-                                    [2019 9 23]
-                                    [2019 10 12]
-                                    [2019 10 31]
-                                    [2019 11 1]
-                                    [2019 11 2]
-                                    [2019 11 18]
-                                    [2019 11 20]
-                                    [2019 11 24]
-                                    [2019 12 8]
-                                    [2019 12 12]
-                                    [2019 12 21]
-                                    [2019 12 24]
-                                    [2019 12 25]
-                                    [2019 12 28]
-                                    [2019 12 31]]))
+  (set (map (partial apply t/date-time) [[2019 1 1] [2019 1 6] [2019 2 2] [2019 2 4]
+                                         [2019 2 5] [2019 2 14] [2019 3 24] [2019 3 6]
+                                         [2019 3 18] [2019 3 18] [2019 3 20] [2019 4 21]
+                                         [2019 4 14] [2019 4 18] [2019 4 19] [2019 4 20]
+                                         [2019 5 21] [2019 5 30] [2019 5 1] [2019 5 5]
+                                         [2019 5 10] [2019 5 15] [2019 5 30] [2019 6 9]
+                                         [2019 6 16] [2019 6 20] [2019 6 21] [2019 8 15]
+                                         [2019 9 15] [2019 9 16] [2019 9 23] [2019 10 12]
+                                         [2019 10 31] [2019 11 1] [2019 11 2] [2019 11 18]
+                                         [2019 11 20] [2019 11 24] [2019 12 8] [2019 12 12]
+                                         [2019 12 21] [2019 12 24] [2019 12 25] [2019 12 28]
+                                         [2019 12 31]])))
+
+(defn contains-date?
+  "Takes a date and returns true if the date is in a specific vector"
+  [holidays date]
+  (some (partial pr/same-date? date) holidays))
+
+(s/fdef contains-date?
+        :args (s/cat :holidays (s/coll-of ::g/date-type)
+                     :date ::g/date-type)
+        :ret (s/or :boolean boolean? :nil nil?))
+
+;; TODO: make contains-date accept date in any format compatible with clj-time coerce
+
+(defn biz-day?
+  "provided a date and a list of holidays returns true if the date is both a weekday
+  and not a holiday"
+  [date holidays]
+  (and (pr/weekday? date) (not (contains-date? holidays date))))
+
+(s/fdef biz-day?
+        :args (s/cat :date ::g/date-type
+                     :holidays (s/coll-of ::g/date-type))
+        :ret boolean?)
+
+(defn nxt-day
+  "provided a date returns the nxt day"
+  [date]
+  (t/plus date (t/days 1)))
+
+(s/fdef nxt-day
+        :args ::g/date-type
+        :ret ::g/date-type
+        :fn #(t/after? (:ret %) (-> % :args :date)))
+
+(defn nxt-biz-day-incl
+  "Provided a date and a list of holidays return the nxt week day that is not
+  a holiday. if the provided date is a week day and not a holiday returns the same date"
+  [date holidays]
+  (if (biz-day? date holidays) date (nxt-biz-day-incl (nxt-day date) holidays)))
+
+(s/fdef nxt-biz-day-incl
+        :args (s/cat :date ::g/date-type
+                     :holidays (s/coll-of ::g/date-type))
+        :ret ::g/date-type
+        :fn #(t/after? (:ret %) (-> % :args :date)))
 
 ;;TODO: would it make more sense to model holidays as a file instead of a hardcoded list here?
