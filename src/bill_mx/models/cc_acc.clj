@@ -6,7 +6,8 @@
 (s/def ::id ::g/id)
 (s/def ::mvmts (s/coll-of ::acm/acc-mvmt :distinct true :into []))
 (s/def ::contracted-due-day-of-month ::g/day-of-month)
-(s/def ::grace-period ::g/num-days)
+(s/def ::grace-period (s/with-gen ::g/num-days
+                                  #(s/gen (s/int-in 0 60))))
 (s/def ::days-to-recog-pmt ::g/num-days)
 (s/def ::min-pmt-func ::g/rate)                             ;; TODO: change this from rate to function
 (s/def ::rev-int-apr ::g/rate)
