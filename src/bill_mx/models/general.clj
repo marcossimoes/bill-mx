@@ -1,6 +1,7 @@
 (ns bill-mx.models.general
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
+            [clj-time.core :as t]
             [clj-time.coerce :as co]
             [clj-time.format :as tf]
             [bill-mx.numbers :as n]))
@@ -39,3 +40,15 @@
 (s/def ::clj-time-coerce-type (s/or :inst inst?
                                     :int int?
                                     :str ::date-str))
+
+;; CUSTOM DATE GENERATOR
+
+(defn date-between-gen
+  "Receives a start-date and end-date and returns the generator for a
+  date between these two dates start incl, end excl"
+  [start end]
+  (let [start-date (co/to-date-time start)
+        end-date (co/to-date-time end)]
+    (gen/fmap
+      #(t/plus start-date (t/days %))
+      (s/gen (s/int-in 0 (t/in-days (t/interval start-date end-date)))))))

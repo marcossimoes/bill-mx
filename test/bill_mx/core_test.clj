@@ -1,7 +1,5 @@
 (ns bill-mx.core-test
   (:require [clojure.test :refer :all]
-            [bill-mx.core :refer :all]))
-
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+            [clojure.spec.test.alpha :as stest]
+            [bill-mx.core :refer :all]
+            [midje.sweet :refer :all]))

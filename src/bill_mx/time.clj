@@ -49,12 +49,12 @@
         :ret (s/or :boolean boolean? :nil nil?))
 
 (defn nxt-n-day
-  "Receives a bill with open-date and a contracted-due-day-of-month
-  and Returns a bill with due date"
+  "Receives a date and a day-of month and returns the nxt date that contains
+  that day of month"
   [date day-of-month]
   (bm/when-let* [formatted-date (co/to-date-time date)
                  days-to (- day-of-month (t/day formatted-date))]
-    (t/plus formatted-date (t/days days-to) (if (n/not-pos? days-to) (t/months 1)))))
+                (t/plus formatted-date (t/days days-to) (if (n/not-pos? days-to) (t/months 1)))))
 
 (s/fdef nxt-n-day
         :args (s/cat :date ::g/clj-time-coerce-type
@@ -63,6 +63,38 @@
         :fn #(t/after? (:ret %) (co/to-local-date (-> % :args :date (second)))))
 
 ;FIXME: stest/check not working for nxt-n-day
+
+(defn prev-n-day
+  "Receives a date and a day-of month between 1 and 28
+  and returns the previous date that contains that day of month"
+  [date day-of-month]
+  (bm/when-let* [formatted-date (co/to-date-time date)
+                 days-to (- (t/day formatted-date) day-of-month)]
+                (t/minus formatted-date (t/days days-to) (if (n/not-pos? days-to) (t/months 1)))))
+
+(s/fdef prev-n-day
+        :args (s/cat :date ::g/clj-time-coerce-type
+                     :day-of-month ::g/day-of-month)
+        :ret ::g/date
+        :fn #(t/before? (:ret %) (co/to-local-date (-> % :args :date (second)))))
+
+(defn closest-n-day
+  "Given an open date, a due day and a grace period
+  returns the due date that minimizes the distance
+  of effective close-date an ideal close date (open-date + 1 month)"
+  [date day]
+  (bm/when-let* [formatted-date (co/to-date-time date)
+                 diff (- day (t/day date))]
+                (cond
+                  (or (< diff -15) (<= 1 diff 15)) (nxt-n-day formatted-date day)
+                  (or (<= -15 diff -1) (< 15 diff)) (prev-n-day formatted-date day)
+                  :else date)))
+
+(s/fdef closest-n-day
+        :args (s/cat :date ::g/date
+                     :day ::g/day-of-month)
+        :ret ::g/date
+        :fn #(> (:ret %) (-> % :args :date)))
 
 (def holidays
   (set (map (partial apply t/date-time) [[2019 1 1] [2019 1 6] [2019 2 2] [2019 2 4]
