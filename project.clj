@@ -3,9 +3,11 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [clj-time "0.15.0"]]
   :main ^:skip-aot bill-mx.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
-             :dev     {:dependencies [[org.clojure/test.check "0.9.0"]]}})
+             :dev     {:dependencies [[org.clojure/test.check "0.9.0"]
+                                      [midje "1.7.0"]]}
+             :midje {}})
